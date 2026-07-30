@@ -6,6 +6,7 @@ import backCover from "@/assets/Back.png";
 import solar1 from "@/assets/solar-1.png";
 import solar5 from "@/assets/solar-5.png";
 import solar7 from "@/assets/solar-7.png";
+import solar10 from "@/assets/solar-10.png";
 import { BulletList, Card, PageShell, Rule, type PageTone } from "./primitives";
 
 export const PAGE_ASSETS = [
@@ -17,6 +18,7 @@ export const PAGE_ASSETS = [
   solar1,
   solar5,
   solar7,
+  solar10,
 ];
 
 /**
@@ -446,49 +448,10 @@ function WhyZenith() {
 
 // 10 — Installation Process
 function Installation() {
-  const steps = [
-    "Initial Consultation",
-    "Energy Consumption Analysis",
-    "Site Survey",
-    "Engineering Design",
-    "Commercial Proposal",
-    "Installation",
-    "Testing & Commissioning",
-    "Net Metering Approval",
-    "System Monitoring",
-    "Operations & Maintenance Support",
-  ];
   return (
-    <Shell index={10} section="Installation Process" className="justify-start pt-14 pb-0">
-      <Rule />
-      <h2 className="page-h1 mt-7 text-navy">Our installation process</h2>
-      <p className="page-lead mt-4 text-ink">
-        Our streamlined project execution ensures every installation is completed efficiently and
-        safely.
-      </p>
-      <div className="mt-5 grid grid-cols-2 gap-x-8">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-4 border-t border-rule py-2.5">
-            <span className="page-kicker w-8 flex-none tabular-nums text-brand-red">
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span className="page-body text-navy">{s}</span>
-          </div>
-        ))}
-      </div>
-      <p className="page-body mt-4 text-ink">
-        Every project is managed by experienced professionals to ensure quality, safety, and timely
-        delivery.
-      </p>
-      <div className="mt-2 min-h-0 flex-1 w-full overflow-hidden">
-        <img
-          src={solar5}
-          alt="Zenith Energy Solar Installation Process"
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
-      </div>
-    </Shell>
+    <div className="page-canvas relative overflow-hidden bg-paper">
+      <img src={solar10} alt="Our Installation Process" className="h-full w-full object-cover" />
+    </div>
   );
 }
 

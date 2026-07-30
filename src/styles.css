@@ -232,10 +232,13 @@
     box-sizing: border-box !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
   html,
-  body {
+  body,
+  .section-wrapper {
     width: 210mm !important;
     height: 297mm !important;
     margin: 0 !important;
@@ -265,6 +268,7 @@
     margin: 0 !important;
     padding: 0 !important;
     opacity: 1 !important;
+    background: #ffffff !important;
   }
 
   .print-page {
@@ -299,5 +303,13 @@
     box-shadow: none !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
+  }
+
+  /* Force background colors on specific tone pages */
+  .print-page .bg-paper {
+    background-color: #ffffff !important;
+  }
+  .print-page .bg-navy {
+    background-color: oklch(0.212 0.0888 264.5) !important;
   }
 }

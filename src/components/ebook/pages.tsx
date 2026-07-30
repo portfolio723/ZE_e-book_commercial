@@ -146,7 +146,7 @@ function About() {
               sustainable future.
             </p>
           </div>
-          <div className="rounded-2xl border border-rule p-7 shadow-card">
+          <div className="rounded-2xl border border-rule bg-paper p-7 shadow-card">
             <span className="page-kicker text-brand-red">Our Vision</span>
             <p className="page-body mt-4 text-ink">
               To become India&apos;s most trusted commercial solar EPC partner by delivering
@@ -175,7 +175,7 @@ function WhySwitching() {
         ].map((p, idx) => (
           <div key={idx} className="border-t border-rule pt-5">
             <div className="mb-3 flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-sm font-bold text-navy-foreground shadow-sm">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-sm font-bold text-navy-foreground">
                 {idx + 1}
               </span>
             </div>
@@ -410,7 +410,10 @@ function Solutions() {
       <h2 className="page-h2 mt-6 text-navy">Choosing the right commercial solar solution</h2>
       <div className="mt-6 grid grid-cols-3 gap-5 [&_.page-body]:text-[15px] [&_.page-body]:leading-[1.4] [&_.page-small]:text-[14px] [&_.page-small]:leading-[1.45]">
         {models.map((m) => (
-          <div key={m.no} className="flex flex-col rounded-2xl border border-rule p-5 shadow-card">
+          <div
+            key={m.no}
+            className="flex flex-col rounded-2xl border border-rule bg-paper p-5 shadow-card"
+          >
             <p className="page-kicker text-brand-red">{m.no}</p>
             <h3 className="page-h3 mt-2 text-[20px] text-navy">{m.title}</h3>
             <p className="page-small mt-3 text-ink">{m.body}</p>
@@ -569,7 +572,7 @@ function Faqs() {
       <h2 className="page-h1 mt-8 text-navy">Frequently asked questions</h2>
       <div className="mt-10 space-y-5">
         {faqs.map(([q, a]) => (
-          <div key={q} className="rounded-2xl border border-rule p-7 shadow-card">
+          <div key={q} className="rounded-2xl border border-rule bg-paper p-7 shadow-card">
             <h3 className="page-h3 text-navy">{q}</h3>
             <p className="page-body mt-3 text-ink">{a}</p>
           </div>

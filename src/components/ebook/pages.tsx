@@ -5,6 +5,7 @@ import frontCover from "@/assets/Front.png";
 import backCover from "@/assets/Back.png";
 import solar1 from "@/assets/solar-1.png";
 import solar5 from "@/assets/solar-5.png";
+import solar7 from "@/assets/solar-7.png";
 import { BulletList, Card, PageShell, Rule, type PageTone } from "./primitives";
 
 export const PAGE_ASSETS = [
@@ -15,6 +16,7 @@ export const PAGE_ASSETS = [
   panelDetail,
   solar1,
   solar5,
+  solar7,
 ];
 
 /**
@@ -435,58 +437,10 @@ function Solutions() {
 
 // 09 — Why Choose Zenith Energy
 function WhyZenith() {
-  const strengths = [
-    "Complete EPC Services",
-    "Experienced Engineering Team",
-    "Tier-1 Solar Panels",
-    "High-Efficiency Inverters",
-    "Customized System Design",
-    "PAN India Installation",
-    "Remote Monitoring",
-    "Annual Maintenance Services",
-    "Strong Safety Standards",
-    "Dedicated Customer Support",
-  ];
   return (
-    <Shell
-      index={9}
-      section="Why Choose Zenith Energy"
-      tone="navy"
-      className="justify-start pt-14 pb-0"
-    >
-      <Rule tone="navy" />
-      <h2 className="page-h1 mt-7">Why choose Zenith Energy?</h2>
-      <div className="mt-4 space-y-3">
-        <p className="page-body opacity-90">
-          Choosing the right EPC partner is just as important as choosing the right solar
-          technology.
-        </p>
-        <p className="page-body opacity-90">
-          Zenith Energy combines engineering expertise, premium-quality components, and end-to-end
-          project management to deliver reliable commercial solar solutions.
-        </p>
-      </div>
-      <p className="page-small mt-4 opacity-70">Our strengths include:</p>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {strengths.map((s) => (
-          <div key={s} className="rounded-xl bg-navy-foreground/10 px-4 py-2.5">
-            <p className="page-body text-sm">{s}</p>
-          </div>
-        ))}
-      </div>
-      <p className="page-body mt-3 opacity-90">
-        We focus on delivering systems that maximize energy generation, ensure long-term
-        reliability, and provide the highest financial returns.
-      </p>
-      <div className="mt-1 min-h-0 flex-1 w-full overflow-hidden">
-        <img
-          src={solar1}
-          alt="Zenith Energy Commercial Solar Installation"
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
-      </div>
-    </Shell>
+    <div className="page-canvas relative overflow-hidden bg-navy">
+      <img src={solar7} alt="Why Choose Zenith Energy" className="h-full w-full object-cover" />
+    </div>
   );
 }
 

@@ -3,9 +3,19 @@ import facility from "@/assets/facility.jpg";
 import panelDetail from "@/assets/panel-detail.jpg";
 import frontCover from "@/assets/Front.png";
 import backCover from "@/assets/Back.png";
+import solar1 from "@/assets/solar-1.png";
+import solar5 from "@/assets/solar-5.png";
 import { BulletList, Card, PageShell, Rule, type PageTone } from "./primitives";
 
-export const PAGE_ASSETS = [frontCover, backCover, rooftopSolar, facility, panelDetail];
+export const PAGE_ASSETS = [
+  frontCover,
+  backCover,
+  rooftopSolar,
+  facility,
+  panelDetail,
+  solar1,
+  solar5,
+];
 
 /**
  * All copy on these pages is taken verbatim from the supplied
@@ -435,10 +445,15 @@ function WhyZenith() {
     "Dedicated Customer Support",
   ];
   return (
-    <Shell index={9} section="Why Choose Zenith Energy" tone="navy">
+    <Shell
+      index={9}
+      section="Why Choose Zenith Energy"
+      tone="navy"
+      className="justify-start pt-14 pb-0"
+    >
       <Rule tone="navy" />
-      <h2 className="page-h1 mt-8">Why choose Zenith Energy?</h2>
-      <div className="mt-8 space-y-5">
+      <h2 className="page-h1 mt-7">Why choose Zenith Energy?</h2>
+      <div className="mt-4 space-y-3">
         <p className="page-body opacity-90">
           Choosing the right EPC partner is just as important as choosing the right solar
           technology.
@@ -448,18 +463,26 @@ function WhyZenith() {
           project management to deliver reliable commercial solar solutions.
         </p>
       </div>
-      <p className="page-small mt-10 opacity-70">Our strengths include:</p>
-      <div className="mt-5 grid grid-cols-2 gap-4">
+      <p className="page-small mt-4 opacity-70">Our strengths include:</p>
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         {strengths.map((s) => (
-          <div key={s} className="rounded-xl bg-navy-foreground/10 px-6 py-4">
-            <p className="page-body">{s}</p>
+          <div key={s} className="rounded-xl bg-navy-foreground/10 px-4 py-2.5">
+            <p className="page-body text-sm">{s}</p>
           </div>
         ))}
       </div>
-      <p className="page-body mt-10 opacity-90">
+      <p className="page-body mt-3 opacity-90">
         We focus on delivering systems that maximize energy generation, ensure long-term
         reliability, and provide the highest financial returns.
       </p>
+      <div className="mt-1 min-h-0 flex-1 w-full overflow-hidden">
+        <img
+          src={solar1}
+          alt="Zenith Energy Commercial Solar Installation"
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      </div>
     </Shell>
   );
 }
@@ -479,16 +502,16 @@ function Installation() {
     "Operations & Maintenance Support",
   ];
   return (
-    <Shell index={10} section="Installation Process">
+    <Shell index={10} section="Installation Process" className="justify-start pt-14 pb-0">
       <Rule />
-      <h2 className="page-h1 mt-8 text-navy">Our installation process</h2>
-      <p className="page-lead mt-8 text-ink">
+      <h2 className="page-h1 mt-7 text-navy">Our installation process</h2>
+      <p className="page-lead mt-4 text-ink">
         Our streamlined project execution ensures every installation is completed efficiently and
         safely.
       </p>
-      <div className="mt-10 grid grid-cols-2 gap-x-10">
+      <div className="mt-5 grid grid-cols-2 gap-x-8">
         {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-5 border-t border-rule py-5">
+          <div key={s} className="flex items-center gap-4 border-t border-rule py-2.5">
             <span className="page-kicker w-8 flex-none tabular-nums text-brand-red">
               {String(i + 1).padStart(2, "0")}
             </span>
@@ -496,10 +519,18 @@ function Installation() {
           </div>
         ))}
       </div>
-      <p className="page-body mt-8 text-ink">
+      <p className="page-body mt-4 text-ink">
         Every project is managed by experienced professionals to ensure quality, safety, and timely
         delivery.
       </p>
+      <div className="mt-2 min-h-0 flex-1 w-full overflow-hidden">
+        <img
+          src={solar5}
+          alt="Zenith Energy Solar Installation Process"
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      </div>
     </Shell>
   );
 }

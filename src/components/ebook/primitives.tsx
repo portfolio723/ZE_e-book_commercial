@@ -82,12 +82,13 @@ export function Wordmark({ tone = "paper" }: { tone?: PageTone }) {
 }
 
 /** Red hairline used to open a title block. */
-export function Rule({ tone = "paper" }: { tone?: PageTone }) {
+export function Rule({ tone = "paper", className }: { tone?: PageTone; className?: string }) {
   return (
     <span
       className={cn(
         "block h-1 w-16 rounded-full",
         tone === "paper" ? "bg-brand-red" : "bg-current opacity-80",
+        className,
       )}
     />
   );

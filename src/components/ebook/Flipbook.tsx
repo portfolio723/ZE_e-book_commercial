@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  LayoutGrid,
-  Maximize2,
-  Printer,
-  X,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutGrid, Maximize2, Printer, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PAGES, PAGE_ASSETS } from "./pages";
@@ -23,6 +14,7 @@ export function Flipbook() {
   const [grid, setGrid] = useState(false);
   const [fitScale, setFitScale] = useState(0.5);
   const [zoomFactor, setZoomFactor] = useState(1);
+  const [isPinching, setIsPinching] = useState(false);
   const [isPreloaded, setIsPreloaded] = useState(false);
 
   const frameRef = useRef<HTMLDivElement>(null);
@@ -66,21 +58,14 @@ export function Flipbook() {
   const next = useCallback(() => go(current + 1, "next"), [current, go]);
   const prev = useCallback(() => go(current - 1, "prev"), [current, go]);
 
-  const zoomIn = useCallback(() => {
-    setZoomFactor((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100));
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    setZoomFactor((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100));
-  }, []);
-
   const resetZoom = useCallback(() => {
     setZoomFactor(1);
   }, []);
 
-  // Touch handlers for swipe slide & hand touch pinch zoom in / zoom out
+  // Touch handlers for swipe slide & smooth hand touch pinch zoom in / zoom out
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 1) {
+      setIsPinching(false);
       touchStartRef.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
@@ -88,6 +73,7 @@ export function Flipbook() {
         zoomStart: zoomFactor,
       };
     } else if (e.touches.length === 2) {
+      setIsPinching(true);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
@@ -109,23 +95,27 @@ export function Flipbook() {
       const currentDist = Math.hypot(dx, dy);
       if (touchStartRef.current.dist > 0) {
         const scaleChange = currentDist / touchStartRef.current.dist;
-        const newZoom = Math.min(2.5, Math.max(0.5, touchStartRef.current.zoomStart * scaleChange));
-        setZoomFactor(Math.round(newZoom * 100) / 100);
+        const newZoom = Math.min(2.5, Math.max(0.8, touchStartRef.current.zoomStart * scaleChange));
+        setZoomFactor(newZoom);
       }
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!touchStartRef.current) return;
-    const { x, dist } = touchStartRef.current;
+    const { x, y, dist } = touchStartRef.current;
     touchStartRef.current = null;
+    setIsPinching(false);
 
     if (dist === null && e.changedTouches.length > 0) {
       const deltaX = e.changedTouches[0].clientX - x;
-      if (deltaX < -40) {
-        next();
-      } else if (deltaX > 40) {
-        prev();
+      const deltaY = e.changedTouches[0].clientY - y;
+      if (Math.abs(deltaX) > 40 && Math.abs(deltaY) < 80) {
+        if (deltaX < 0) {
+          next();
+        } else {
+          prev();
+        }
       }
     }
   };
@@ -139,8 +129,7 @@ export function Flipbook() {
       const height = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
       if (!width || !height) return;
       const fitBoth = Math.min(width / PAGE_W, height / PAGE_H);
-      const fitWidth = width / PAGE_W;
-      setFitScale(width < 700 ? fitWidth : fitBoth);
+      setFitScale(fitBoth);
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -158,19 +147,17 @@ export function Flipbook() {
       if (e.key === "ArrowLeft") prev();
       if (e.key.toLowerCase() === "g") setGrid((g) => !g);
       if (e.key === "Escape") setGrid(false);
-      if (e.key === "+" || e.key === "=") zoomIn();
-      if (e.key === "-") zoomOut();
       if (e.key === "0") resetZoom();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, zoomIn, zoomOut, resetZoom]);
+  }, [next, prev, resetZoom]);
 
   const effectiveScale = fitScale * zoomFactor;
   const page = PAGES[current];
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-background select-none">
       <header className="flex flex-none items-center justify-between border-b border-rule bg-paper px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="block h-4 w-4 flex-none rounded-[4px] bg-brand-red" />
@@ -180,32 +167,6 @@ export function Flipbook() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Zoom Controls Bar without 100% CTA */}
-          {!grid && (
-            <div className="flex items-center gap-0.5 rounded-full border border-rule bg-secondary/50 p-1">
-              <button
-                type="button"
-                onClick={zoomOut}
-                disabled={zoomFactor <= 0.5}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-navy transition-colors hover:bg-paper disabled:opacity-40"
-                aria-label="Zoom Out"
-                title="Zoom Out (-)"
-              >
-                <ZoomOut className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={zoomIn}
-                disabled={zoomFactor >= 2.5}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-navy transition-colors hover:bg-paper disabled:opacity-40"
-                aria-label="Zoom In"
-                title="Zoom In (+)"
-              >
-                <ZoomIn className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
           <button
             type="button"
             onClick={triggerBrowserPrint}
@@ -274,11 +235,14 @@ export function Flipbook() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="absolute inset-0 flex items-start justify-center overflow-auto overscroll-contain p-2 sm:items-center sm:p-6"
+            className="absolute inset-0 flex items-center justify-center overflow-auto overscroll-contain p-2 sm:p-6"
           >
             <div
               style={{ width: PAGE_W * effectiveScale, height: PAGE_H * effectiveScale }}
-              className="relative mx-auto flex-none overflow-hidden rounded-lg shadow-page transition-[width,height] duration-300 ease-out"
+              className={cn(
+                "relative mx-auto flex-none overflow-hidden rounded-lg shadow-page",
+                !isPinching && "transition-[width,height] duration-200 ease-out",
+              )}
             >
               <div
                 className="absolute left-0 top-0 origin-top-left"
@@ -297,7 +261,7 @@ export function Flipbook() {
       )}
 
       {/* Footer Navigation Bar with Left/Right icons brought to bottom middle */}
-      <footer className="flex flex-none flex-col items-center justify-between gap-2.5 border-t border-rule bg-paper px-4 py-2.5 sm:flex-row sm:px-6 sm:py-3.5">
+      <footer className="flex flex-none flex-col items-center justify-between gap-1.5 border-t border-rule bg-paper px-3 py-2 sm:flex-row sm:px-6 sm:py-3.5">
         <div className="hidden min-w-0 flex-1 items-center gap-2 sm:flex">
           <span className="truncate text-xs font-medium text-ink-muted sm:text-sm">
             {page.title}
@@ -305,13 +269,13 @@ export function Flipbook() {
         </div>
 
         {/* Bottom Middle Controls: Left Arrow, Page Counter, Right Arrow + Progress Bar */}
-        <div className="flex w-full flex-col items-center justify-center gap-2 sm:w-auto">
+        <div className="flex w-full flex-col items-center justify-center gap-1.5 sm:w-auto">
           <div className="flex items-center justify-center gap-3">
             <button
               type="button"
               onClick={prev}
               disabled={current === 0}
-              className="flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-sm transition-all hover:bg-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+              className="flex h-9 w-9 min-h-[36px] min-w-[36px] items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-sm transition-all hover:bg-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-30 sm:h-10 sm:w-10"
               aria-label="Previous page"
               title="Previous Page"
             >
@@ -326,7 +290,7 @@ export function Flipbook() {
               type="button"
               onClick={next}
               disabled={current === PAGES.length - 1}
-              className="flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-sm transition-all hover:bg-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+              className="flex h-9 w-9 min-h-[36px] min-w-[36px] items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-sm transition-all hover:bg-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-30 sm:h-10 sm:w-10"
               aria-label="Next page"
               title="Next Page"
             >
@@ -334,7 +298,7 @@ export function Flipbook() {
             </button>
           </div>
 
-          <div className="flex w-full max-w-[280px] sm:max-w-xs items-center gap-1">
+          <div className="flex w-full max-w-[260px] sm:max-w-xs items-center gap-1">
             {PAGES.map((p, i) => (
               <button
                 key={p.index}

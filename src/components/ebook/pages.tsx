@@ -168,7 +168,6 @@ function WhySwitching() {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-sm font-bold text-navy-foreground shadow-sm">
                 {idx + 1}
               </span>
-              <span className="page-kicker text-brand-red">Point {idx + 1}</span>
             </div>
             <p className="page-body text-ink">{p}</p>
           </div>

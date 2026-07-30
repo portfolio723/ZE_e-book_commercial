@@ -406,11 +406,7 @@ export function Flipbook() {
         aria-hidden="true"
       >
         {PAGES.map((p) => (
-          <div
-            key={p.index}
-            id={`pdf-page-${p.index}`}
-            className="print-page page-canvas overflow-hidden"
-          >
+          <div key={p.index} id={`pdf-page-${p.index}`} className="print-page overflow-hidden">
             <p.render />
           </div>
         ))}

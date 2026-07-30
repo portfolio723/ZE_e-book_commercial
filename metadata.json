@@ -1,0 +1,6 @@
+{
+  "name": "Solar Blueprint Pro",
+  "description": "Commercial Solar eBook & Interactive Guide",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

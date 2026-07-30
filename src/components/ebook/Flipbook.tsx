@@ -2,9 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
   LayoutGrid,
-  Loader2,
   Maximize2,
   Printer,
   X,
@@ -25,12 +23,15 @@ export function Flipbook() {
   const [grid, setGrid] = useState(false);
   const [fitScale, setFitScale] = useState(0.5);
   const [zoomFactor, setZoomFactor] = useState(1);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState(0);
   const [isPreloaded, setIsPreloaded] = useState(false);
 
   const frameRef = useRef<HTMLDivElement>(null);
-  const touchX = useRef<number | null>(null);
+  const touchStartRef = useRef<{
+    x: number;
+    y: number;
+    dist: number | null;
+    zoomStart: number;
+  } | null>(null);
 
   // Preload all page images and assets on mount
   useEffect(() => {
@@ -52,55 +53,6 @@ export function Flipbook() {
     setTimeout(() => {
       window.print();
     }, 150);
-  };
-
-  const downloadPDF = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    setExportProgress(1);
-    toast.info("Preparing print-ready A4 PDF...");
-
-    try {
-      const { default: jsPDF } = await import("jspdf");
-      const { default: html2canvas } = await import("html2canvas");
-
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      for (let i = 0; i < PAGES.length; i++) {
-        const pageIndex = i + 1;
-        setExportProgress(pageIndex);
-
-        const pageEl = document.getElementById(`pdf-page-${pageIndex}`);
-        if (!pageEl) continue;
-
-        const canvas = await html2canvas(pageEl, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-        });
-
-        const imgData = canvas.toDataURL("image/jpeg", 0.95);
-        if (i > 0) {
-          pdf.addPage("a4", "portrait");
-        }
-        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
-      }
-
-      pdf.save("Zenith_Energy_Commercial_Solar_eBook.pdf");
-      toast.success("eBook PDF downloaded successfully!");
-    } catch (err) {
-      console.error("PDF generation failed:", err);
-      toast.error("Failed to generate PDF. Please try again.");
-    } finally {
-      setIsExporting(false);
-      setExportProgress(0);
-    }
   };
 
   const go = useCallback((to: number, direction: "next" | "prev") => {
@@ -126,6 +78,58 @@ export function Flipbook() {
     setZoomFactor(1);
   }, []);
 
+  // Touch handlers for swipe slide & hand touch pinch zoom in / zoom out
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        dist: null,
+        zoomStart: zoomFactor,
+      };
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      touchStartRef.current = {
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        dist,
+        zoomStart: zoomFactor,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartRef.current) return;
+
+    if (e.touches.length === 2 && touchStartRef.current.dist !== null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const currentDist = Math.hypot(dx, dy);
+      if (touchStartRef.current.dist > 0) {
+        const scaleChange = currentDist / touchStartRef.current.dist;
+        const newZoom = Math.min(2.5, Math.max(0.5, touchStartRef.current.zoomStart * scaleChange));
+        setZoomFactor(Math.round(newZoom * 100) / 100);
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartRef.current) return;
+    const { x, dist } = touchStartRef.current;
+    touchStartRef.current = null;
+
+    if (dist === null && e.changedTouches.length > 0) {
+      const deltaX = e.changedTouches[0].clientX - x;
+      if (deltaX < -40) {
+        next();
+      } else if (deltaX > 40) {
+        prev();
+      }
+    }
+  };
+
   useLayoutEffect(() => {
     const el = frameRef.current;
     if (!el) return;
@@ -134,8 +138,6 @@ export function Flipbook() {
       const width = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
       const height = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
       if (!width || !height) return;
-      // Desktop/tablet: fit the whole A4 page, centered.
-      // Narrow screens: fit the width and let the page scroll vertically.
       const fitBoth = Math.min(width / PAGE_W, height / PAGE_H);
       const fitWidth = width / PAGE_W;
       setFitScale(width < 700 ? fitWidth : fitBoth);
@@ -178,9 +180,9 @@ export function Flipbook() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Zoom Controls Bar */}
+          {/* Zoom Controls Bar without 100% CTA */}
           {!grid && (
-            <div className="flex items-center rounded-full border border-rule bg-secondary/50 p-1">
+            <div className="flex items-center gap-0.5 rounded-full border border-rule bg-secondary/50 p-1">
               <button
                 type="button"
                 onClick={zoomOut}
@@ -190,15 +192,6 @@ export function Flipbook() {
                 title="Zoom Out (-)"
               >
                 <ZoomOut className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={resetZoom}
-                className="px-2 text-xs font-semibold tabular-nums text-navy transition-colors hover:text-brand-red"
-                aria-label="Reset Zoom"
-                title="Reset Zoom (0)"
-              >
-                {Math.round(zoomFactor * 100)}%
               </button>
               <button
                 type="button"
@@ -223,24 +216,6 @@ export function Flipbook() {
             <Printer className="h-4 w-4" />
             <span className="hidden min-[540px]:inline">Print Vector PDF</span>
             <span className="min-[540px]:hidden">Print</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={downloadPDF}
-            disabled={isExporting}
-            className="flex min-h-[40px] items-center gap-2 rounded-full bg-navy px-3 py-2 text-xs font-medium text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-sm"
-            aria-label="Download flipbook as print-ready A4 PDF"
-          >
-            {isExporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            <span className="hidden min-[480px]:inline">
-              {isExporting ? `Generating (${exportProgress}/${PAGES.length})...` : "Download PDF"}
-            </span>
-            <span className="min-[480px]:hidden">Download</span>
           </button>
 
           <button
@@ -296,20 +271,9 @@ export function Flipbook() {
         <div className="relative min-h-0 flex-1">
           <div
             ref={frameRef}
-            onTouchStart={(e) => {
-              if (zoomFactor === 1) {
-                touchX.current = e.touches[0].clientX;
-              }
-            }}
-            onTouchEnd={(e) => {
-              if (zoomFactor !== 1) return;
-              const start = touchX.current;
-              touchX.current = null;
-              if (start === null) return;
-              const delta = e.changedTouches[0].clientX - start;
-              if (delta < -48) next();
-              if (delta > 48) prev();
-            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             className="absolute inset-0 flex items-start justify-center overflow-auto overscroll-contain p-2 sm:items-center sm:p-6"
           >
             <div
@@ -329,45 +293,48 @@ export function Flipbook() {
               </div>
             </div>
           </div>
-
-          {/* Side Floating Navigation Buttons */}
-          <NavButton side="left" onClick={prev} disabled={current === 0} />
-          <NavButton side="right" onClick={next} disabled={current === PAGES.length - 1} />
         </div>
       )}
 
-      {/* Footer Navigation Bar */}
-      <footer className="grid flex-none grid-cols-12 items-center gap-2 border-t border-rule bg-paper px-4 py-3 sm:px-6 sm:py-4">
-        {/* Left Section: Mobile Direct Prev/Next + Page Counter */}
-        <div className="col-span-4 flex items-center gap-2 sm:col-span-3 sm:gap-3">
-          <div className="flex items-center gap-1 sm:hidden">
+      {/* Footer Navigation Bar with Left/Right icons brought to bottom middle */}
+      <footer className="flex flex-none flex-col items-center justify-between gap-2.5 border-t border-rule bg-paper px-4 py-2.5 sm:flex-row sm:px-6 sm:py-3.5">
+        <div className="hidden min-w-0 flex-1 items-center gap-2 sm:flex">
+          <span className="truncate text-xs font-medium text-ink-muted sm:text-sm">
+            {page.title}
+          </span>
+        </div>
+
+        {/* Bottom Middle Controls: Left Arrow, Page Counter, Right Arrow + Progress Bar */}
+        <div className="flex w-full flex-col items-center justify-center gap-2 sm:w-auto">
+          <div className="flex items-center justify-center gap-3">
             <button
               type="button"
               onClick={prev}
               disabled={current === 0}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-rule bg-paper text-navy shadow-sm transition-colors hover:bg-secondary disabled:opacity-30"
+              className="flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-sm transition-all hover:bg-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-30"
               aria-label="Previous page"
+              title="Previous Page"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
+
+            <span className="text-sm font-bold tabular-nums text-navy px-1">
+              {String(current + 1).padStart(2, "0")} / {PAGES.length}
+            </span>
+
             <button
               type="button"
               onClick={next}
               disabled={current === PAGES.length - 1}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-rule bg-paper text-navy shadow-sm transition-colors hover:bg-secondary disabled:opacity-30"
+              className="flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-sm transition-all hover:bg-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-30"
               aria-label="Next page"
+              title="Next Page"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </button>
           </div>
-          <span className="text-sm font-semibold tabular-nums text-navy">
-            {String(current + 1).padStart(2, "0")} / {PAGES.length}
-          </span>
-        </div>
 
-        {/* Center Section: Progress Bar (Center Aligned) */}
-        <div className="col-span-4 flex items-center justify-center sm:col-span-6">
-          <div className="flex w-full max-w-md items-center gap-1">
+          <div className="flex w-full max-w-[280px] sm:max-w-xs items-center gap-1">
             {PAGES.map((p, i) => (
               <button
                 key={p.index}
@@ -375,7 +342,7 @@ export function Flipbook() {
                 aria-label={`Go to page ${p.index}: ${p.title}`}
                 onClick={() => go(i, i > current ? "next" : "prev")}
                 className={cn(
-                  "h-2 flex-1 rounded-full transition-colors",
+                  "h-1.5 flex-1 rounded-full transition-all",
                   i === current ? "bg-brand-red" : "bg-rule hover:bg-navy/30",
                 )}
               />
@@ -383,23 +350,21 @@ export function Flipbook() {
           </div>
         </div>
 
-        {/* Right Section: Page Title & Optional Fit Button */}
-        <div className="col-span-4 flex items-center justify-end gap-2 sm:col-span-3">
-          <span className="truncate text-xs text-ink-muted sm:text-sm">{page.title}</span>
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 sm:flex">
           {zoomFactor !== 1 && (
             <button
               type="button"
               onClick={resetZoom}
-              className="hidden items-center gap-1 rounded-lg border border-rule px-2.5 py-1 text-xs text-navy hover:bg-secondary sm:flex"
+              className="flex items-center gap-1.5 rounded-full border border-rule bg-paper px-3 py-1.5 text-xs font-medium text-navy shadow-sm transition-all hover:bg-secondary"
             >
               <Maximize2 className="h-3.5 w-3.5" />
-              <span>Fit</span>
+              <span>Fit Page</span>
             </button>
           )}
         </div>
       </footer>
 
-      {/* Offscreen A4 container used for both browser vector print and client-side PDF generation */}
+      {/* Offscreen A4 container used for browser vector print generation */}
       <div
         id="print-container"
         className="pointer-events-none fixed -left-[9999px] top-0 opacity-100"
@@ -412,32 +377,5 @@ export function Flipbook() {
         ))}
       </div>
     </div>
-  );
-}
-
-function NavButton({
-  side,
-  onClick,
-  disabled,
-}: {
-  side: "left" | "right";
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  const Icon = side === "left" ? ChevronLeft : ChevronRight;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={side === "left" ? "Previous page" : "Next page"}
-      className={cn(
-        "absolute top-1/2 z-10 flex min-h-[44px] min-w-[44px] h-11 w-11 sm:h-12 sm:w-12 -translate-y-1/2 items-center justify-center rounded-full border border-rule bg-paper text-navy shadow-card transition-all active:scale-95",
-        side === "left" ? "left-2 sm:left-6" : "right-2 sm:right-6",
-        disabled ? "pointer-events-none opacity-0" : "hover:bg-secondary",
-      )}
-    >
-      <Icon className="h-5 w-5" />
-    </button>
   );
 }

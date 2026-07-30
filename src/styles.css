@@ -285,13 +285,15 @@
   }
 
   /* Ensure page canvas fits exact 210mm x 297mm printable A4 dimensions with zero scaling gaps */
-  .page-canvas,
   .print-page .page-canvas {
-    width: 210mm !important;
-    height: 297mm !important;
-    max-width: 210mm !important;
-    max-height: 297mm !important;
-    transform: none !important;
+    width: 960px !important;
+    height: 1358px !important;
+    min-width: 960px !important;
+    min-height: 1358px !important;
+    max-width: 960px !important;
+    max-height: 1358px !important;
+    transform: scale(0.82677) !important;
+    transform-origin: top left !important;
     margin: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;

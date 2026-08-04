@@ -1,7 +1,7 @@
 import rooftopSolar from "@/assets/rooftop-solar.jpg";
 import facility from "@/assets/facility.jpg";
 import panelDetail from "@/assets/panel-detail.jpg";
-import frontCover from "@/assets/Front.png";
+import frontCover from "@/assets/A4 - B.png";
 import backCover from "@/assets/Back.png";
 import solar1 from "@/assets/solar-1.png";
 import solar5 from "@/assets/solar-5.png";
